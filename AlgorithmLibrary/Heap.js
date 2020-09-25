@@ -274,5 +274,238 @@ Heap.prototype.swap = function(index1, index2)
 	this.cmd("Delete", this.swapLabel5);
 	this.cmd("Delete", this.swapLabel6);	
 }
+Heap.prototype.pushDown = function(index)
+{
+	var smallestIndex;
+	
+	while(true)
+	{	
+		console.log("Entro");
+		console.log(index*2);
+		console.log(this.currentHeapSize);
+		if (index*2 > this.currentHeapSize)
+		{
+			return;
+		}
+		
+		smallestIndex = 2*index;
+		
+		if (index*2 + 1 <= this.currentHeapSize)
+		{
+			this.setIndexHighlight(2*index, 1);
+			this.setIndexHighlight(2*index + 1, 1);
+			this.cmd("Step");
+			this.setIndexHighlight(2*index, 0);
+			this.setIndexHighlight(2*index + 1, 0);
+
+			if (this.priorityData[2*index + 1] < this.priorityData[2*index])
+			{
+				smallestIndex = 2*index + 1;
+				console.log("Nuevo smallest: ", smallestIndex);
+			}
+			else if(this.priorityData[2*index + 1] == this.priorityData[2*index])
+			{
+				if (this.arrayData[2*index + 1] < this.arrayData[2*index])
+				{
+					smallestIndex = 2*index + 1;
+					console.log("Nuevo smallest: ", smallestIndex);
+				}	
+			}				
+		}
+		this.setIndexHighlight(index, 1);
+		this.setIndexHighlight(smallestIndex, 1);
+		this.cmd("Step");
+		this.setIndexHighlight(index, 0);
+		this.setIndexHighlight(smallestIndex, 0);
+		
+		if (this.priorityData[smallestIndex] < this.priorityData[index])
+		{
+			this.swap(smallestIndex, index);
+			index = smallestIndex;
+			console.log("Nuevo index: ", index);
+		}
+		else if (this.priorityData[smallestIndex] == this.priorityData[index])
+		{	
+			if (this.arrayData[smallestIndex] < this.arrayData[index])
+			{
+				this.swap(smallestIndex, index);
+				index = smallestIndex;
+				console.log("Nuevo index: ", index);
+			}
+			else
+			{					
+				return;
+			}
+		}
+		else{
+			index = smallestIndex;
+		}
+	}
+}
+
+Heap.prototype.pushDownMaxHeap = function(index)
+{
+	var biggestIndex;
+	
+	while(true)
+	{
+		if (index*2 > this.currentHeapSize)
+		{
+			return;
+		}
+		
+		biggestIndex = 2*index;
+		
+		if (index*2 + 1 <= this.currentHeapSize)
+		{
+			this.setIndexHighlight(2*index, 1);
+			this.setIndexHighlight(2*index + 1, 1);
+			this.cmd("Step");
+			this.setIndexHighlight(2*index, 0);
+			this.setIndexHighlight(2*index + 1, 0);
+			if (this.priorityData[2*index + 1] > this.priorityData[2*index])
+			{
+				biggestIndex = 2*index + 1;
+			}
+			else if(this.priorityData[2*index + 1] == this.priorityData[2*index])
+			{
+				if (this.arrayData[2*index + 1] > this.arrayData[2*index])
+				{
+					biggestIndex = 2*index + 1;
+				}	
+			}
+		}
+		this.setIndexHighlight(index, 1);
+		this.setIndexHighlight(biggestIndex, 1);
+		this.cmd("Step");
+		this.setIndexHighlight(index, 0);
+		this.setIndexHighlight(biggestIndex, 0);
+		
+		if (this.priorityData[biggestIndex] > this.priorityData[index])
+		{
+			this.swap(biggestIndex, index);
+			index = biggestIndex;
+		}
+		else if (this.priorityData[biggestIndex] == this.priorityData[index])
+		{	
+			if (this.arrayData[biggestIndex] < this.arrayData[index])
+			{
+				this.swap(biggestIndex, index);
+				index = biggestIndex;		
+			}
+			else
+			{
+				return;
+			}
+		}
+		else
+		{
+			index = biggestIndex;
+		}		
+	}
+}
+
+
+Heap.prototype.removeSmallestCallback = function(event)
+{
+	this.implementAction(this.removeSmallest.bind(this),"");
+}
+
+Heap.prototype.removeSmallestMaxHeapCallback = function(event)
+{
+	this.implementAction(this.removeSmallestMaxHeap.bind(this),"");
+}
+
+Heap.prototype.removeSmallest = function(dummy)
+{
+	this.commands = new Array();
+	this.cmd("SetText", this.descriptLabel1, "");
+	
+	if (this.currentHeapSize == 0)
+	{
+		this.cmd("SetText", this.descriptLabel1, "Heap is empty, cannot remove smallest element");
+		return this.commands;
+	}
+	
+	this.cmd("SetText", this.descriptLabel1, "Removing element:");			
+	this.cmd("CreateLabel", this.descriptLabel2, this.arrayData[1],  this.HeapXPositions[1], this.HeapYPositions[1], 0);
+	this.cmd("SetText", this.circleObjs[1], "");
+	this.cmd("Move", this.descriptLabel2,  120, 40);
+	this.cmd("Step");
+	this.cmd("Delete", this.descriptLabel2);
+	this.cmd("SetText", this.descriptLabel1, "Removing element: " + this.arrayData[1]);
+	this.arrayData[1] = "";
+	this.priorityData[1] = "";
+
+	if (this.currentHeapSize > 1)
+	{
+		this.cmd("SetText", this.arrayRects[1], "");
+		this.cmd("SetText", this.arrayRects[this.currentHeapSize], "");
+
+		this.cmd("SetText", this.arrayRects2[1], "");
+		this.cmd("SetText", this.arrayRects2[this.currentHeapSize], "");
+
+		this.swap(1,this.currentHeapSize);
+		this.cmd("Delete", this.circleObjs[this.currentHeapSize]);
+		this.currentHeapSize--;
+		this.pushDown(1);				
+	} else {
+        this.cmd("SetText", this.arrayRects[1], "");
+		this.cmd("Delete", this.circleObjs[this.currentHeapSize]);
+
+		this.cmd("SetText", this.arrayRects2[1], "");
+		this.cmd("SetText", this.arrayRects2[this.currentHeapSize], "");
+
+		this.currentHeapSize--;
+
+        }
+	return this.commands;	
+}
+
+Heap.prototype.removeSmallestMaxHeap = function(dummy)
+{
+	this.commands = new Array();
+	this.cmd("SetText", this.descriptLabel1, "");
+	
+	if (this.currentHeapSize == 0)
+	{
+		this.cmd("SetText", this.descriptLabel1, "Heap is empty, cannot remove smallest element");
+		return this.commands;
+	}
+	
+	this.cmd("SetText", this.descriptLabel1, "Removing element:");			
+	this.cmd("CreateLabel", this.descriptLabel2, this.arrayData[1],  this.HeapXPositions[1], this.HeapYPositions[1], 0);
+	this.cmd("SetText", this.circleObjs[1], "");
+	this.cmd("Move", this.descriptLabel2,  120, 40);
+	this.cmd("Step");
+	this.cmd("Delete", this.descriptLabel2);
+	this.cmd("SetText", this.descriptLabel1, "Removing element: " + this.arrayData[1]);
+	this.arrayData[1] = "";
+	this.priorityData[1] = "";
+
+	if (this.currentHeapSize > 1)
+	{
+		this.cmd("SetText", this.arrayRects[1], "");
+		this.cmd("SetText", this.arrayRects[this.currentHeapSize], "");
+
+		this.cmd("SetText", this.arrayRects2[1], "");
+		this.cmd("SetText", this.arrayRects2[this.currentHeapSize], "");
+
+		this.swap(1,this.currentHeapSize);
+		this.cmd("Delete", this.circleObjs[this.currentHeapSize]);
+		this.currentHeapSize--;
+		this.pushDownMaxHeap(1);				
+	} else {
+        this.cmd("SetText", this.arrayRects[1], "");
+		this.cmd("Delete", this.circleObjs[this.currentHeapSize]);
+
+		this.cmd("SetText", this.arrayRects2[1], "");
+		this.cmd("SetText", this.arrayRects2[this.currentHeapSize], "");
+
+		this.currentHeapSize--;
+
+        }
+	return this.commands;	
+}
 
 
